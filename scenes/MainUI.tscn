@@ -1,0 +1,405 @@
+[gd_scene load_steps=22 format=3 uid="uid://8mnmvvsj40u5"]
+
+[ext_resource type="Texture2D" uid="uid://srgwookmvm7l" path="res://assets/scroll/pngs/medium.png" id="1_muv1u"]
+[ext_resource type="FontFile" uid="uid://b3444dq4q6vvk" path="res://assets/fonts/VT323-Regular.ttf" id="2_opw0s"]
+[ext_resource type="Script" path="res://scenes/Button.gd" id="4_3bmm5"]
+[ext_resource type="Texture2D" uid="uid://dx1qaf6l42wrn" path="res://assets/scroll/pngs/parts/ribbon.png" id="5_n0ew6"]
+[ext_resource type="Texture2D" uid="uid://dy0nd4d8c3uw6" path="res://assets/image-removebg-preview.png" id="6_sjvex"]
+
+[sub_resource type="GDScript" id="GDScript_1k20p"]
+script/source = "extends CanvasLayer
+
+var panel: Panel
+@export var time = 4 # seconds
+var elapsed_time = 0.0
+var is_panel_freed = false
+
+func _ready():
+	panel = get_node(\"Panel\")
+	panel.visible = true
+
+func _process(delta):
+	if is_panel_freed:
+		return
+
+	if elapsed_time < time:
+		elapsed_time += delta
+		var alpha = 1.0 - (elapsed_time / time)
+		panel.modulate.a = alpha
+	else:
+		panel.queue_free()
+		is_panel_freed = true
+"
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_els77"]
+bg_color = Color(0.6, 0.6, 0.6, 0)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_mcmw5"]
+bg_color = Color(0.6, 0.6, 0.6, 0)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_nd6g1"]
+bg_color = Color(0, 0, 0, 0)
+border_color = Color(0, 0, 0, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_v2xkr"]
+bg_color = Color(0.6, 0.6, 0.6, 0)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_sbi0l"]
+bg_color = Color(0.72549, 0, 0, 0)
+
+[sub_resource type="GDScript" id="GDScript_do6n0"]
+script/source = "extends Button
+@export var cnf_panel : Panel
+@export var hintbox  : Panel
+func _ready():
+	cnf_panel = get_node(\"../../hint_cnf\")
+	hintbox = get_tree().get_nodes_in_group(\"hint\")[0]
+	hintbox.visible = false
+	cnf_panel.visible = false
+	
+	
+func _pressed():
+	cnf_panel.visible = !cnf_panel.visible
+"
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_lhv81"]
+bg_color = Color(0, 0, 0, 0.788235)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_3ci84"]
+bg_color = Color(0.301789, 0.414871, 0.813445, 1)
+
+[sub_resource type="GDScript" id="GDScript_6x1j3"]
+script/source = "extends Button
+
+func _pressed():
+	get_parent().visible = false
+	QuestionManager.OnPlayerAskHint($\"../../hint/Label\")
+	var hintbox = get_tree().get_nodes_in_group(\"hint\")[0]
+	hintbox.visible = true
+"
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_u0gfv"]
+bg_color = Color(0.844411, 0, 0.153759, 1)
+
+[sub_resource type="GDScript" id="GDScript_4rh68"]
+script/source = "extends Button
+func _pressed():
+	get_parent().visible = false
+"
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_pqhi7"]
+bg_color = Color(0, 0, 0, 0.788235)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_jeybk"]
+bg_color = Color(0, 0, 0, 0.807843)
+
+[sub_resource type="GDScript" id="GDScript_e4ok8"]
+script/source = "extends Button
+
+
+func _pressed():
+	get_parent().visible = false
+"
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_m646k"]
+bg_color = Color(0, 0, 0, 1)
+
+[node name="CanvasLayer" type="CanvasLayer"]
+script = SubResource("GDScript_1k20p")
+
+[node name="Question" type="Panel" parent="." groups=["QuestionPanel"]]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -187.0
+offset_top = -243.5
+offset_right = 187.0
+offset_bottom = 243.5
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_els77")
+
+[node name="TextureRect" type="TextureRect" parent="Question"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -538.5
+offset_top = -698.5
+offset_right = 538.5
+offset_bottom = 698.5
+grow_horizontal = 2
+grow_vertical = 2
+scale = Vector2(0.39, 0.39)
+pivot_offset = Vector2(538, 698)
+texture = ExtResource("1_muv1u")
+
+[node name="ques_text" type="Panel" parent="Question"]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -134.0
+offset_top = 119.0
+offset_right = 129.0
+offset_bottom = 322.0
+grow_horizontal = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_mcmw5")
+
+[node name="text" type="RichTextLabel" parent="Question/ques_text"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = 174.0
+offset_bottom = 91.0
+grow_horizontal = 2
+grow_vertical = 2
+scale = Vector2(0.6, 0.6)
+focus_mode = 2
+theme_override_colors/default_color = Color(0, 0, 0, 1)
+theme_override_fonts/normal_font = ExtResource("2_opw0s")
+theme_override_font_sizes/normal_font_size = 48
+text = "This is the Question. How will this Look.
+Hello 0123456789"
+selection_enabled = true
+
+[node name="ans_text" type="Panel" parent="Question"]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -134.0
+offset_top = 336.5
+offset_right = 129.0
+offset_bottom = 421.5
+grow_horizontal = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_mcmw5")
+
+[node name="TextEdit" type="TextEdit" parent="Question/ans_text"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = 175.0
+offset_bottom = 57.0
+grow_horizontal = 2
+grow_vertical = 2
+scale = Vector2(0.6, 0.6)
+theme_override_colors/background_color = Color(0, 0, 0, 0)
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_colors/font_placeholder_color = Color(0, 0, 0, 0.403922)
+theme_override_fonts/font = ExtResource("2_opw0s")
+theme_override_font_sizes/font_size = 36
+theme_override_styles/normal = SubResource("StyleBoxFlat_nd6g1")
+placeholder_text = "Answer Here"
+wrap_mode = 1
+scroll_smooth = true
+caret_blink = true
+
+[node name="submit" type="Panel" parent="Question"]
+layout_mode = 0
+offset_left = 302.0
+offset_top = 457.5
+offset_right = 366.0
+offset_bottom = 490.5
+theme_override_styles/panel = SubResource("StyleBoxFlat_v2xkr")
+
+[node name="TextureRect" type="TextureRect" parent="Question/submit"]
+layout_mode = 0
+offset_left = -17.0
+offset_top = 19.0
+offset_right = 144.0
+offset_bottom = 312.0
+rotation = 1.5708
+scale = Vector2(0.35, 0.35)
+pivot_offset = Vector2(75, 22.59)
+texture = ExtResource("5_n0ew6")
+flip_v = true
+
+[node name="Button" type="Button" parent="Question/submit"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -221.0
+offset_top = -63.5
+offset_right = -103.0
+offset_bottom = -3.5
+grow_horizontal = 2
+grow_vertical = 2
+scale = Vector2(0.6, 0.6)
+pivot_offset = Vector2(410, 155)
+theme_override_fonts/font = ExtResource("2_opw0s")
+theme_override_font_sizes/font_size = 32
+theme_override_styles/normal = SubResource("StyleBoxFlat_sbi0l")
+theme_override_styles/hover = SubResource("StyleBoxFlat_sbi0l")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_sbi0l")
+theme_override_styles/focus = SubResource("StyleBoxFlat_sbi0l")
+text = "Submit"
+script = ExtResource("4_3bmm5")
+
+[node name="hint_btn" type="Panel" parent="Question" groups=["hintBtn"]]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -64.0
+offset_bottom = 39.0
+grow_horizontal = 0
+theme_override_styles/panel = SubResource("StyleBoxFlat_v2xkr")
+
+[node name="Button" type="Button" parent="Question/hint_btn"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -69.0
+offset_top = -38.0
+offset_right = 731.0
+offset_bottom = 762.0
+grow_horizontal = 2
+grow_vertical = 2
+scale = Vector2(0.1, 0.1)
+tooltip_text = "Get Hint
+-30 points"
+theme_override_font_sizes/font_size = 256
+theme_override_styles/normal = SubResource("StyleBoxFlat_sbi0l")
+theme_override_styles/hover = SubResource("StyleBoxFlat_sbi0l")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_sbi0l")
+text = "
+"
+icon = ExtResource("6_sjvex")
+icon_alignment = 1
+expand_icon = true
+script = SubResource("GDScript_do6n0")
+
+[node name="hint_cnf" type="Panel" parent="Question"]
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -137.0
+offset_top = -48.0
+offset_right = 123.0
+offset_bottom = 52.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_lhv81")
+
+[node name="Label" type="Label" parent="Question/hint_cnf"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_left = -656.0
+offset_top = 3.0
+offset_right = 941.0
+offset_bottom = 356.0
+grow_horizontal = 2
+scale = Vector2(0.1, 0.1)
+pivot_offset = Vector2(769, 10)
+tooltip_text = "(No extra points will be deducted if you've already purchased the hint)"
+mouse_filter = 1
+theme_override_font_sizes/font_size = 128
+text = "Buy for 30 points?
+(Points will only be used once)"
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="confirmBtn" type="Button" parent="Question/hint_cnf"]
+layout_mode = 0
+offset_left = 167.0
+offset_top = 62.0
+offset_right = 547.0
+offset_bottom = 182.0
+scale = Vector2(0.2, 0.2)
+theme_override_font_sizes/font_size = 64
+theme_override_styles/normal = SubResource("StyleBoxFlat_3ci84")
+text = "Confirm"
+script = SubResource("GDScript_6x1j3")
+
+[node name="cancelBtn" type="Button" parent="Question/hint_cnf"]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 62.0
+offset_right = 400.0
+offset_bottom = 182.0
+scale = Vector2(0.2, 0.2)
+theme_override_font_sizes/font_size = 64
+theme_override_styles/normal = SubResource("StyleBoxFlat_u0gfv")
+text = "Cancel
+"
+script = SubResource("GDScript_4rh68")
+
+[node name="hint" type="Panel" parent="Question" groups=["hint"]]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -137.0
+offset_top = -113.5
+offset_right = 123.0
+offset_bottom = 105.5
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_pqhi7")
+
+[node name="Label" type="RichTextLabel" parent="Question/hint"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -796.0
+offset_top = -99.5
+offset_right = 1324.0
+offset_bottom = 1705.5
+grow_horizontal = 2
+grow_vertical = 2
+scale = Vector2(0.1, 0.1)
+pivot_offset = Vector2(769, 10)
+focus_mode = 2
+theme_override_font_sizes/normal_font_size = 128
+selection_enabled = true
+
+[node name="doneBtn" type="Button" parent="Question/hint"]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -190.0
+offset_top = -120.0
+offset_right = 190.0
+grow_horizontal = 2
+grow_vertical = 0
+scale = Vector2(0.17, 0.17)
+pivot_offset = Vector2(190, 110)
+theme_override_font_sizes/font_size = 64
+theme_override_styles/normal = SubResource("StyleBoxFlat_jeybk")
+text = "Done"
+script = SubResource("GDScript_e4ok8")
+
+[node name="Panel" type="Panel" parent="."]
+visible = false
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_m646k")

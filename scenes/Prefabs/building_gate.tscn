@@ -1,0 +1,49 @@
+[gd_scene load_steps=3 format=3 uid="uid://bfgpjktw1nr5o"]
+
+[sub_resource type="GDScript" id="GDScript_7ehsq"]
+script/source = "extends Area2D
+
+@export var exitGate: NodePath
+var isPlayerInside: bool = false
+var exit_node: Node
+var exit_script
+
+func _ready() -> void:
+	exit_node = get_node(exitGate)
+	exit_script = exit_node.get_parent()
+
+func _on_body_entered(body: Node) -> void:
+	if body.is_in_group(\"Player\") and not isPlayerInside:
+		exit_script.set_is_player_inside(true)
+		set_is_player_inside(true)
+		if exit_script.get_is_player_inside():
+			#print(exit_script.name + \": \" + str(exit_script.get_is_player_inside()))
+			body.position = exit_node.global_position
+
+
+func _on_body_exited(body: Node) -> void:
+	if body.is_in_group(\"Player\") and isPlayerInside:
+		exit_script.set_is_player_inside(false)
+		set_is_player_inside(false)
+		#print(exit_script.name + \": \" + str(exit_script.get_is_player_inside()))
+
+func set_is_player_inside(flag: bool) -> void:
+	isPlayerInside = flag
+
+func get_is_player_inside():
+	return isPlayerInside
+"
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_qjnk4"]
+size = Vector2(41, 20)
+
+[node name="building_gate" type="Area2D"]
+collision_layer = 128
+collision_mask = 128
+script = SubResource("GDScript_7ehsq")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_qjnk4")
+
+[connection signal="body_entered" from="." to="." method="_on_body_entered"]
+[connection signal="body_exited" from="." to="." method="_on_body_exited"]

@@ -1,0 +1,259 @@
+[gd_scene load_steps=15 format=3 uid="uid://b1e7qcqkaoc3u"]
+
+[ext_resource type="Texture2D" uid="uid://0g6ppu2gwgwq" path="res://assets/mysticwoods/bg image.png" id="1_0w6gc"]
+[ext_resource type="Texture2D" uid="uid://db63ko3lmin38" path="res://assets/logo with bg (1).png" id="2_2vrr0"]
+[ext_resource type="Texture2D" uid="uid://ccm3sipkyuw6r" path="res://assets/Traced-Logo white.png" id="3_qry3f"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_c73js"]
+bg_color = Color(0, 0, 0, 0.27451)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_dkawy"]
+bg_color = Color(0, 0, 0, 0.788235)
+
+[sub_resource type="GDScript" id="GDScript_y35yx"]
+script/source = "extends Button
+
+func _pressed():
+	disabled = true
+	var loading = load(\"res://scenes/loading.tscn\")
+	get_tree().change_scene_to_packed(loading)
+"
+
+[sub_resource type="GDScript" id="GDScript_s33hg"]
+script/source = "extends Button
+
+var username : TextEdit
+var password : TextEdit
+var start : Button
+
+func _ready():
+	username = get_node(\"../Username\")
+	password = get_node(\"../Password\")
+	start = get_node(\"../StartGame\")
+	start.visible = false
+	start.disabled = true
+	visible = true
+func _pressed():
+	print(\"Username: \" + username.text + \"\\nPassword: \" + password.text)
+	WebsocketHandler.auth_response.connect(OnAuthResponse)
+	WebsocketHandler._auth(username.text, password.get_pass())
+	disabled = true
+
+func OnAuthResponse(success):
+	if success:
+		start.visible = true
+		start.disabled = false
+		visible = false
+	else:
+		print(\"Error while authenticating\")
+		disabled =false
+	
+"
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_mbe3e"]
+bg_color = Color(0, 0, 0, 0.788235)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_exu3c"]
+bg_color = Color(0, 0, 0, 0.788235)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ir0s3"]
+bg_color = Color(0, 0, 0, 0)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bnjy3"]
+bg_color = Color(0, 0, 0, 0)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_4y8bc"]
+bg_color = Color(0, 0, 0, 0)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_47s23"]
+bg_color = Color(0, 0, 0, 0)
+
+[sub_resource type="GDScript" id="GDScript_i3ax6"]
+script/source = "extends TextEdit
+
+var actual_password = \"\"
+
+func _ready():
+	# The signal connection is done via the UI, so no need to connect here.
+	pass
+
+# Ensure the method name matches the one created by the signal connection via the UI
+func _on_TextEdit_text_changed():
+	var new_text = text
+	if new_text.length() > actual_password.length():
+		# Adding new characters
+		actual_password += new_text.substr(actual_password.length(), new_text.length() - actual_password.length())
+	else:
+		# Removing characters
+		actual_password = actual_password.substr(0, new_text.length())
+
+	# Create a string of asterisks
+	var masked_text = \"\"
+	for i in range(actual_password.length()):
+		masked_text += \"*\"
+
+	# Replace the displayed text with asterisks
+	text = masked_text
+"
+
+[node name="Control" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Panel" type="Panel" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_c73js")
+
+[node name="TextureRect" type="TextureRect" parent="Panel"]
+show_behind_parent = true
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -576.0
+offset_top = -324.0
+offset_right = 580.694
+offset_bottom = 1731.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("1_0w6gc")
+expand_mode = 3
+
+[node name="TextureRect2" type="TextureRect" parent="Panel"]
+layout_mode = 1
+offset_right = 110.0
+offset_bottom = 100.0
+texture = ExtResource("2_2vrr0")
+expand_mode = 1
+
+[node name="TextureRect3" type="TextureRect" parent="Panel"]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -152.0
+offset_top = 20.0
+offset_right = -24.0
+offset_bottom = 81.0
+grow_horizontal = 0
+texture = ExtResource("3_qry3f")
+expand_mode = 3
+
+[node name="StartGame" type="Button" parent="Panel"]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -420.0
+offset_top = -169.0
+offset_right = -36.0
+offset_bottom = -45.0
+grow_horizontal = 0
+grow_vertical = 0
+theme_override_font_sizes/font_size = 64
+theme_override_styles/normal = SubResource("StyleBoxFlat_dkawy")
+text = "Start Game
+"
+script = SubResource("GDScript_y35yx")
+
+[node name="Connect" type="Button" parent="Panel"]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -420.0
+offset_top = -169.0
+offset_right = -36.0
+offset_bottom = -45.0
+grow_horizontal = 0
+grow_vertical = 0
+theme_override_font_sizes/font_size = 64
+theme_override_styles/normal = SubResource("StyleBoxFlat_dkawy")
+text = "Connect"
+script = SubResource("GDScript_s33hg")
+
+[node name="Panel" type="Panel" parent="Panel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 732.0
+offset_top = 323.0
+offset_right = -36.0
+offset_bottom = -279.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_mbe3e")
+
+[node name="Panel2" type="Panel" parent="Panel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 732.0
+offset_top = 398.0
+offset_right = -36.0
+offset_bottom = -204.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_exu3c")
+
+[node name="Username" type="TextEdit" parent="Panel"]
+layout_mode = 1
+anchors_preset = 6
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = -1152.0
+offset_top = -376.0
+offset_right = 312.0
+offset_bottom = -193.0
+grow_horizontal = 0
+grow_vertical = 2
+scale = Vector2(0.25, 0.25)
+pivot_offset = Vector2(1000, 500)
+theme_override_font_sizes/font_size = 128
+theme_override_styles/normal = SubResource("StyleBoxFlat_ir0s3")
+theme_override_styles/focus = SubResource("StyleBoxFlat_bnjy3")
+placeholder_text = "Username"
+caret_blink = true
+
+[node name="Password" type="TextEdit" parent="Panel"]
+layout_mode = 1
+anchors_preset = 6
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = -1152.0
+offset_top = -301.0
+offset_right = 316.0
+offset_bottom = -118.0
+grow_horizontal = 0
+grow_vertical = 2
+scale = Vector2(0.25, 0.25)
+pivot_offset = Vector2(1000, 500)
+theme_override_font_sizes/font_size = 128
+theme_override_styles/normal = SubResource("StyleBoxFlat_4y8bc")
+theme_override_styles/focus = SubResource("StyleBoxFlat_47s23")
+placeholder_text = "Password"
+caret_blink = true
+script = SubResource("GDScript_i3ax6")
+
+[connection signal="text_changed" from="Panel/Password" to="Panel/Password" method="_on_text_changed"]

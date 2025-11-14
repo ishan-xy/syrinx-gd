@@ -1,0 +1,92 @@
+[gd_scene load_steps=4 format=3 uid="uid://cs32wacbpdddi"]
+
+[ext_resource type="PackedScene" uid="uid://c05jl2c7qrt2p" path="res://scenes/Prefabs/scroll_pickup.tscn" id="1_npfpg"]
+
+[sub_resource type="GDScript" id="GDScript_cb0t7"]
+script/source = "extends Area2D
+
+@export var question_id: int
+@onready var quesPanel
+var inPlayerArea := false
+var playerBody
+
+var quesLabel : RichTextLabel
+var user_answer : TextEdit
+var submitBtn : Button
+
+var scroll : Node2D
+
+# Flag to check if the player is typing
+var is_typing := false
+
+func _ready() -> void:
+	quesPanel = get_tree().get_nodes_in_group(\"QuestionPanel\")[0]
+	quesLabel = quesPanel.get_child(1).get_child(0)
+	user_answer = quesPanel.get_child(2).get_child(0)
+	submitBtn = quesPanel.get_child(3).get_child(1)
+	scroll = get_node(\"./scroll\")
+	scroll.visible = false
+	quesPanel.visible = false
+	add_to_group(\"QuestionAreas\")
+
+	# Connect the focus signals
+	user_answer.focus_entered.connect(_on_TextEdit_focus_entered)
+	user_answer.focus_exited.connect(_on_TextEdit_focus_exited)
+
+func _process(_delta: float) -> void:
+	if Input.is_action_just_pressed(\"ques_int\") and inPlayerArea and not is_typing:
+		toggle_question_panel()
+	if Input.is_action_just_pressed(\"exit_menu\") and inPlayerArea:
+		close_question_panel()
+
+func _on_body_entered(body: Node) -> void:
+	if body.is_in_group(\"Player\"):
+		submitBtn.button_down.connect(_on_playersubmit_pressed)
+		QuestionManager.OnPlayerEnter(question_id, quesLabel, submitBtn, user_answer)
+		scroll.visible=true
+		inPlayerArea = true
+		playerBody = body
+		#print(\"Press E to interact\")
+
+func _on_playersubmit_pressed():
+	QuestionManager.OnPlayerSubmit(question_id, user_answer)
+	
+	
+func toggle_question_panel() -> void:
+	quesPanel.visible = !quesPanel.visible
+	QuestionManager.OnPlayerToggle(question_id)
+	if playerBody:
+		playerBody.SetIsInteracting(quesPanel.visible)
+
+func close_question_panel() -> void:
+	quesPanel.visible = false
+	if playerBody:
+		playerBody.SetIsInteracting(false)
+	QuestionManager.OnPlayerToggle(question_id)
+
+func _on_body_exited(_body: Node) -> void:
+	inPlayerArea = false
+	if submitBtn.button_down.is_connected(_on_playersubmit_pressed):
+		submitBtn.button_down.disconnect(_on_playersubmit_pressed)
+	close_question_panel()
+
+func _on_TextEdit_focus_entered():
+	is_typing = true
+
+func _on_TextEdit_focus_exited():
+	is_typing = false
+"
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_vh74r"]
+
+[node name="QuestionArea" type="Area2D" groups=["QuestionAreas"]]
+script = SubResource("GDScript_cb0t7")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." groups=["QuestionAreas"]]
+shape = SubResource("RectangleShape2D_vh74r")
+
+[node name="scroll" parent="." instance=ExtResource("1_npfpg")]
+z_index = -1
+
+[connection signal="body_entered" from="." to="." method="_on_body_entered"]
+[connection signal="body_exited" from="." to="." method="_on_body_exited"]

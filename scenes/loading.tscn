@@ -1,0 +1,101 @@
+[gd_scene load_steps=8 format=3 uid="uid://pfuqktlwknxs"]
+
+[ext_resource type="Texture2D" uid="uid://0g6ppu2gwgwq" path="res://assets/mysticwoods/bg image.png" id="1_2fvkq"]
+[ext_resource type="Texture2D" uid="uid://db63ko3lmin38" path="res://assets/logo with bg (1).png" id="2_mqp7x"]
+[ext_resource type="Texture2D" uid="uid://ccm3sipkyuw6r" path="res://assets/Traced-Logo white.png" id="3_e04om"]
+[ext_resource type="Texture2D" uid="uid://186e2imnj2f" path="res://assets/Untitled(1).png" id="3_qhejd"]
+[ext_resource type="Texture2D" uid="uid://cba6appx4p12s" path="res://assets/Untitled.png" id="4_htbsq"]
+
+[sub_resource type="GDScript" id="GDScript_qnqba"]
+script/source = "extends Control
+
+var progress := []
+var sceneName
+var scene_load_status = 0
+
+# Called when the node enters the scene tree for the first time.
+func _ready():
+	sceneName = \"res://scenes/environments/g_block.tscn\"
+	ResourceLoader.load_threaded_request(sceneName)
+
+
+# Called every frame. 'delta' is the elapsed time since the previous frame.
+func _process(delta):
+	scene_load_status = ResourceLoader.load_threaded_get_status(sceneName, progress)
+	$progressUI.value = int(floor(progress[0]*100))
+	if scene_load_status == ResourceLoader.THREAD_LOAD_LOADED:
+		var newScene = ResourceLoader.load_threaded_get(sceneName)
+		get_tree().change_scene_to_packed(newScene)
+"
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hqoyl"]
+bg_color = Color(0, 0, 0, 0.27451)
+
+[node name="Loading" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = SubResource("GDScript_qnqba")
+
+[node name="Panel" type="Panel" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_hqoyl")
+
+[node name="TextureRect" type="TextureRect" parent="Panel"]
+show_behind_parent = true
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -576.0
+offset_top = -324.0
+offset_right = 580.694
+offset_bottom = 1731.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("1_2fvkq")
+expand_mode = 3
+
+[node name="TextureRect2" type="TextureRect" parent="Panel"]
+layout_mode = 0
+offset_right = 110.0
+offset_bottom = 100.0
+texture = ExtResource("2_mqp7x")
+expand_mode = 1
+
+[node name="TextureRect3" type="TextureRect" parent="Panel"]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -152.0
+offset_top = 20.0
+offset_right = -24.0
+offset_bottom = 81.0
+grow_horizontal = 0
+texture = ExtResource("3_e04om")
+expand_mode = 3
+
+[node name="progressUI" type="TextureProgressBar" parent="."]
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 34.0
+offset_top = -54.0
+offset_right = 484.0
+offset_bottom = -29.0
+grow_vertical = 0
+texture_over = ExtResource("3_qhejd")
+texture_progress = ExtResource("4_htbsq")
+tint_progress = Color(0.533333, 0.611765, 0.345098, 1)

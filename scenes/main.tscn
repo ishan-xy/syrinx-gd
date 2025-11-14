@@ -1,0 +1,140 @@
+[gd_scene load_steps=4 format=3 uid="uid://b1xl74ofruim2"]
+
+[sub_resource type="GDScript" id="GDScript_c57rr"]
+script/source = "extends Node2D
+
+const Chat = preload(\"res://chat.gd\")
+
+func _ready() -> void:
+	return
+	var p1 := Chat.new()
+	var p2 := Chat.new()
+	add_child(p1)
+	add_child(p2)
+
+	# Wait a second and send message from P1.
+	await get_tree().create_timer(1.0).timeout
+	p1.send_message(\"Hi from %s\" % String(p1.get_path()))
+
+	# Wait a second and send message from P2.
+	await get_tree().create_timer(1.0).timeout
+	p2.send_message(\"Hi from %s\" % String(p2.get_path()))
+"
+
+[sub_resource type="GDScript" id="GDScript_b32pp"]
+script/source = "extends Button
+
+@onready var Username: TextEdit = $\"../Username\"
+@onready var Password: TextEdit = $\"../Password\"
+@onready var Multiplayer: Node = $\"../../Multiplayer\"
+
+func _pressed() -> void:
+	Multiplayer._auth(Username.text, Password.text)
+"
+
+[sub_resource type="GDScript" id="GDScript_lkga2"]
+script/source = "extends Node2D
+
+var httpRequest := HTTPRequest.new()
+var clients: PackedByteArray = []
+
+func _ready() -> void:
+	add_child(httpRequest)
+	set_physics_process(false)
+
+func _auth_error(error: String) -> void:
+	print_debug(\"auth error: \", error)
+
+func _lobby_error(error: String) -> void:
+	print_debug(\"lobby error: \", error)
+
+func _auth(Username: String, Password: String) -> void:
+	httpRequest.request_completed.connect(_on_auth_response)
+	var err := httpRequest.request(\"http://127.0.0.1:8080/authanticate\", [], HTTPClient.METHOD_POST, JSON.stringify({\"Username\": Username, \"Password\":Password}))
+	if err != OK: return _auth_error(\"_auth: Error while sending request / Connection error\")
+
+var SessionIDBodyString: String
+var SessionID: PackedByteArray
+func _on_auth_response(result: int, response_code: int, headers: PackedStringArray, body: PackedByteArray) -> void:
+	if result != OK: return _auth_error(\"Http response error, result error: \"+str(result))
+	#if response_code != 200: _auth_error(\"Http response error, response code: \"+str(response_code))
+	SessionIDBodyString = body.get_string_from_ascii()
+	var json: Dictionary = JSON.parse_string(body.get_string_from_ascii())
+	if json == null: return _auth_error(\"Json parse error\")
+	elif json.has(\"error\"): return _auth_error(\"Server error:\\n\" + str(json[\"error\"]))
+	elif !json.has(\"SessionID\"): return _auth_error(\"Mendatory key SessionID not found\")
+	SessionID = json[\"SessionID\"]
+	
+	httpRequest.request_completed.disconnect(_on_auth_response)
+	httpRequest.request_completed.connect(_on_lobby_response)
+	httpRequest.request(\"http://127.0.0.1:8080/getlobby\", [], HTTPClient.METHOD_POST, SessionIDBodyString)
+
+var LobbyID: String
+var wsConn := WebSocketClient.new()
+func _on_lobby_response(result: int, response_code: int, headers: PackedStringArray, body: PackedByteArray) -> void:
+	var json = JSON.parse_string(body.get_string_from_ascii())
+	if json == null: return _lobby_error(\"Json parse error\")
+	elif json.has(\"error\"): return _lobby_error(\"Server error:\\n\" + str(json[\"error\"]))
+	elif !json.has(\"LobbyID\"): return _lobby_error(\"Mendatory key LobbyID not found\")
+	LobbyID = json[\"LobbyID\"]
+	_connect_to_lobby()
+
+func _connect_to_lobby() -> void:
+	wsConn.connect_to_url(\"ws://127.0.0.1:8080/lobby/\" + LobbyID)
+	wsConn.connection_established.connect(_on_ws_ready)
+	set_physics_process(true)
+	#$\"../Control\".queue_free()
+
+func _on_ws_ready(peer: WebSocketPeer, protocol: String) -> void:
+	wsConn.send(SessionID)
+	wsConn.data_received.connect(_on_data_recieved)
+
+var myIndex: int = -1
+func _on_data_recieved(peer : WebSocketPeer, message, is_string : bool) -> void:
+	if is_string:
+		pass
+
+func _physics_process(delta) -> void:
+	wsConn.poll()
+"
+
+[node name="Main" type="Node2D"]
+script = SubResource("GDScript_c57rr")
+
+[node name="Control" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 1152.0
+offset_bottom = 648.0
+
+[node name="Username" type="TextEdit" parent="Control"]
+layout_mode = 0
+offset_left = 371.0
+offset_top = 117.0
+offset_right = 638.0
+offset_bottom = 160.0
+text = "sanyam"
+placeholder_text = "Username"
+drag_and_drop_selection_enabled = false
+
+[node name="Password" type="TextEdit" parent="Control"]
+layout_mode = 0
+offset_left = 371.0
+offset_top = 174.0
+offset_right = 637.0
+offset_bottom = 213.0
+text = "123456789"
+placeholder_text = "Password"
+editable = false
+
+[node name="Button" type="Button" parent="Control"]
+layout_mode = 0
+offset_left = 425.0
+offset_top = 233.0
+offset_right = 585.0
+offset_bottom = 278.0
+text = "Connect"
+script = SubResource("GDScript_b32pp")
+
+[node name="Multiplayer" type="Node2D" parent="."]
+script = SubResource("GDScript_lkga2")
