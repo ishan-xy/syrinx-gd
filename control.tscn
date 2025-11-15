@@ -38,9 +38,9 @@ func _ready():
 	error_label.text = \"\"
 	visible = true
 func _pressed():
-	#print(\"Username: \" + username.text + \"\\nPassword: \" + password.text)
-	#WebsocketHandler.auth_response.connect(OnAuthResponse)
-	#WebsocketHandler._auth(username.text.strip_edges(), password.text)
+	print(\"Username: \" + username.text + \"\\nPassword: \" + password.text)
+	WebsocketHandler.auth_response.connect(OnAuthResponse)
+	WebsocketHandler._auth(username.text.strip_edges(), password.text)
 	OnAuthResponse(true, null)
 	disabled = true
 

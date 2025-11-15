@@ -4,6 +4,9 @@ var httpRequest := HTTPRequest.new()
 var clients: PackedByteArray = []
 var authBtn
 
+const api = "http://api-syrinx.ccstiet.com/"
+const wsapi = "wss://api-syrinx.ccstiet.com/"
+
 func _ready() -> void:
 	authBtn = get_tree().get_nodes_in_group("auth_button")[0]
 	add_child(httpRequest)
@@ -19,19 +22,22 @@ func _lobby_error(error: String) -> void:
 
 func _auth(Username:String, Password:String) -> void:
 	httpRequest.request_completed.connect(_on_auth_response)
-	#print("authenticating")
-	var err := httpRequest.request("https://api-syrinx.ccstiet.com/authanticate", [], HTTPClient.METHOD_POST, JSON.stringify({"Username": Username, "Password":Password}))
-	if err != OK: return _auth_error("_auth: Error while sending request / Connection error")
+	print("authenticating")
+	var err := httpRequest.request(api + "authanticate", [], HTTPClient.METHOD_POST, JSON.stringify({"Username": Username, "Password":Password}))
+	if err != OK: return _auth_error("_auth: Error while authanticating")
 
 var SessionIDBodyString: String
 var SessionID: PackedByteArray
 signal auth_response(bool)
 func _on_auth_response(result: int, _response_code: int, _headers: PackedStringArray, body: PackedByteArray) -> void:
-	if result != OK or body == null: 
+	print("getting lobby")
+	if result != OK or body == null:
 		authBtn.OnAuthResponse(false, result)
 		return _auth_error("Http response error, result error: "+str(result))
-	#if response_code != 200: _auth_error("Http response error, response code: "+str(response_code))
+
+	if _response_code != 200: _auth_error("Http response error, response code: "+str(_response_code))
 	SessionIDBodyString = body.get_string_from_ascii()
+	print("Auth Response: ", SessionIDBodyString)
 	var json: Dictionary = JSON.parse_string(body.get_string_from_ascii())
 	if json == null: return _auth_error("Json parse error")
 	elif json.has("error"): return _auth_error("Server error:\n" + str(json["error"]))
@@ -40,11 +46,13 @@ func _on_auth_response(result: int, _response_code: int, _headers: PackedStringA
 	
 	httpRequest.request_completed.disconnect(_on_auth_response)
 	httpRequest.request_completed.connect(_on_lobby_response)
-	httpRequest.request("https://api-syrinx.ccstiet.com/getlobby", [], HTTPClient.METHOD_POST, SessionIDBodyString)
+	var err := httpRequest.request(api + "getlobby", [], HTTPClient.METHOD_POST, SessionIDBodyString)
+	if err != OK: return _auth_error("_auth: Error while trying to getLobby")
 
 var LobbyID: String
 var wsConn := WebSocketClient.new()
 func _on_lobby_response(_result: int, _response_code: int, _headers: PackedStringArray, body: PackedByteArray) -> void:
+	print("Lobby presponse recieved")
 	var json = JSON.parse_string(body.get_string_from_ascii())
 	print(body.get_string_from_ascii())
 	if json == null: return _lobby_error("Json parse error")
@@ -54,22 +62,22 @@ func _on_lobby_response(_result: int, _response_code: int, _headers: PackedStrin
 	#print(json)
 	if json.has("Level"):
 		if json["Level"] != 1:
-			authBtn.OnAuthResponse(false, "You are not allowed to access this level")
+			if (authBtn): authBtn.OnAuthResponse(false, "You are not allowed to access this level")
 		elif json["Level"] == 1:
-			authBtn.OnAuthResponse(true, "")
+			if (authBtn): authBtn.OnAuthResponse(true, "")
 	wsConn.connection_established.connect(_on_ws_ready)
 	set_physics_process(true)
 	#print("Connected to Lobby")
 	#auth_response.emit(true)
 	wsConn.connection_closed.connect(_connect_to_lobby)
-	wsConn.connect_to_url("ws://api-syrinx.ccstiet.com/lobby/" + LobbyID)
+	wsConn.connect_to_url(wsapi + "lobby/" + LobbyID)
 
 func _connect_to_lobby(_was_clean: bool = false) -> void:
 	set_physics_process(false)
 	await get_tree().create_timer(.5).timeout
 	set_physics_process(true)
-	#print("_connect_to_lobby: called")
-	wsConn.connect_to_url("ws://api-syrinx.ccstiet.com/lobby/" + LobbyID)
+	print("_connect_to_lobby: called")
+	wsConn.connect_to_url(wsapi + "lobby/" + LobbyID)
 
 	#$"../Control".queue_free()
 
